@@ -1,4 +1,4 @@
-// Optimodo Chat Widget
+// Optimodo Chat Widget – Modern Gradient Design
 (function() {
     // Lade externe Styles
     const styleScript = document.createElement('script');
@@ -11,13 +11,14 @@
     fontLink.href = 'https://cdn.jsdelivr.net/npm/geist@1.0.0/dist/fonts/geist-sans/style.css';
     document.head.appendChild(fontLink);
 
-    // Warte kurz, bis Styles geladen sind
+    // Warte, bis Styles geladen sind
     setTimeout(() => {
         const config = window.ChatWidgetConfig || {};
         if (window.OptimodoChatWidgetInitialized) return;
         window.OptimodoChatWidgetInitialized = true;
 
         let currentSessionId = crypto.randomUUID();
+
         const widgetContainer = document.createElement('div');
         widgetContainer.className = 'n8n-chat-widget';
         const chatContainer = document.createElement('div');
@@ -107,13 +108,15 @@
                 addBotMessage(
                     data.output || '👋 Hallo! Wie kann ich dir heute helfen?',
                     data.choices || [
-                        "💻 Neue Website erstellen",
-                        "🚀 Mehr Kunden über meine Website gewinnen",
-                        "✍️ Hilfe bei Texten oder SEO",
-                        "📞 Kontakt aufnehmen"
+                        "💻 Ich möchte eine neue Website erstellen",
+                        "🚀 Ich will mehr Kunden über meine Website gewinnen",
+                        "✍️ Ich brauche Hilfe bei Texten oder SEO",
+                        "📞 Ich möchte Kontakt aufnehmen"
                     ]
                 );
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         // Nachricht senden
@@ -132,23 +135,27 @@
                 });
                 const data = await res.json();
                 addBotMessage(data.output || '', data.choices || []);
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         // Event Listener
         newChatBtn.addEventListener('click', startNewConversation);
-        sendButton.addEventListener('click', () => { 
-            const msg = textarea.value.trim(); 
-            if (msg) { sendMessage(msg); textarea.value = ''; } 
+        sendButton.addEventListener('click', () => {
+            const msg = textarea.value.trim();
+            if (msg) { sendMessage(msg); textarea.value = ''; }
         });
-        textarea.addEventListener('keypress', e => { 
-            if (e.key === 'Enter' && !e.shiftKey) { 
-                e.preventDefault(); 
-                const msg = textarea.value.trim(); 
-                if (msg) { sendMessage(msg); textarea.value = ''; } 
-            } 
+        textarea.addEventListener('keypress', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const msg = textarea.value.trim();
+                if (msg) { sendMessage(msg); textarea.value = ''; }
+            }
         });
         toggleButton.addEventListener('click', () => chatContainer.classList.toggle('open'));
-        chatContainer.querySelectorAll('.close-button').forEach(btn => btn.addEventListener('click', () => chatContainer.classList.remove('open')));
-    }, 300);
+        chatContainer.querySelectorAll('.close-button').forEach(btn => 
+            btn.addEventListener('click', () => chatContainer.classList.remove('open'))
+        );
+    }, 400);
 })();
