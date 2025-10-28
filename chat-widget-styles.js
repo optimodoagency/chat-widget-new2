@@ -1,211 +1,154 @@
-const styles = `
-    .n8n-chat-widget {
-        --chat--color-primary: var(--n8n-chat-primary-color, #7f57f1);
-        --chat--color-secondary: var(--n8n-chat-secondary-color, #9c7bff);
-        --chat--color-background: var(--n8n-chat-background-color, #ffffff);
-        --chat--color-font: var(--n8n-chat-font-color, #1a1a1a);
-        --chat--color-border: rgba(127, 87, 241, 0.2);
-        font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Open Sans', sans-serif;
-    }
+// Optimodo Chat Widget
+(function() {
+    // Lade externe Styles
+    const styleScript = document.createElement('script');
+    styleScript.src = "https://cdn.jsdelivr.net/gh/optimodoagency/chat-widget-new2@main/chat-widget-styles.js";
+    document.head.appendChild(styleScript);
 
-    /* Container */
-    .n8n-chat-widget .chat-container {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        display: none;
-        width: 380px;
-        height: 620px;
-        background: var(--chat--color-background);
-        border-radius: 24px;
-        box-shadow: 0 20px 50px rgba(127, 87, 241, 0.25);
-        border: 1px solid var(--chat--color-border);
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-        animation: fadeIn 0.3s ease-out;
-    }
+    // Lade Schriftart
+    const fontLink = document.createElement('link');
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://cdn.jsdelivr.net/npm/geist@1.0.0/dist/fonts/geist-sans/style.css';
+    document.head.appendChild(fontLink);
 
-    .n8n-chat-widget .chat-container.open {
-        display: flex;
-        flex-direction: column;
-    }
+    // Warte kurz, bis Styles geladen sind
+    setTimeout(() => {
+        const config = window.ChatWidgetConfig || {};
+        if (window.OptimodoChatWidgetInitialized) return;
+        window.OptimodoChatWidgetInitialized = true;
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+        let currentSessionId = crypto.randomUUID();
+        const widgetContainer = document.createElement('div');
+        widgetContainer.className = 'n8n-chat-widget';
+        const chatContainer = document.createElement('div');
+        chatContainer.className = `chat-container${config.style?.position === 'left' ? ' position-left' : ''}`;
 
-    /* Header */
-    .n8n-chat-widget .brand-header {
-        padding: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: linear-gradient(135deg, var(--chat--color-primary), var(--chat--color-secondary));
-        color: white;
-    }
+        // Chat HTML-Struktur
+        chatContainer.innerHTML = `
+            <div class="brand-header">
+                <img src="${config.branding?.logo || ''}" alt="${config.branding?.name || 'Chat'}">
+                <span>${config.branding?.name || 'Optimodo Chat'}</span>
+                <button class="close-button">×</button>
+            </div>
+            <div class="new-conversation">
+                <h2 class="welcome-text">${config.branding?.welcomeText || '👋 Willkommen bei Optimodo!'}</h2>
+                <button class="new-chat-btn">Chat starten</button>
+                <p class="response-text">${config.branding?.responseTimeText || 'Wir antworten in der Regel sofort.'}</p>
+            </div>
+            <div class="chat-interface">
+                <div class="brand-header">
+                    <img src="${config.branding?.logo || ''}" alt="${config.branding?.name || 'Chat'}">
+                    <span>${config.branding?.name || 'Optimodo Chat'}</span>
+                    <button class="close-button">×</button>
+                </div>
+                <div class="chat-messages"></div>
+                <div class="chat-input">
+                    <textarea placeholder="Nachricht eingeben..." rows="1"></textarea>
+                    <button type="submit">Senden</button>
+                </div>
+            </div>
+        `;
 
-    .n8n-chat-widget .brand-header span {
-        font-size: 18px;
-        font-weight: 600;
-    }
+        // Toggle Button
+        const toggleButton = document.createElement('button');
+        toggleButton.className = `chat-toggle${config.style?.position === 'left' ? ' position-left' : ''}`;
+        toggleButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2.5 21.5l4.5-.838A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+            </svg>
+        `;
 
-    .n8n-chat-widget .brand-header img {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(255,255,255,0.2);
-    }
+        widgetContainer.appendChild(chatContainer);
+        widgetContainer.appendChild(toggleButton);
+        document.body.appendChild(widgetContainer);
 
-    .n8n-chat-widget .close-button {
-        background: rgba(255,255,255,0.15);
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 6px 10px;
-        border-radius: 8px;
-        transition: background 0.2s;
-    }
-    .n8n-chat-widget .close-button:hover {
-        background: rgba(255,255,255,0.3);
-    }
+        // Referenzen
+        const newChatBtn = chatContainer.querySelector('.new-chat-btn');
+        const chatInterface = chatContainer.querySelector('.chat-interface');
+        const messagesContainer = chatContainer.querySelector('.chat-messages');
+        const textarea = chatContainer.querySelector('textarea');
+        const sendButton = chatContainer.querySelector('button[type="submit"]');
 
-    /* Messages */
-    .n8n-chat-widget .chat-messages {
-        flex: 1;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        overflow-y: auto;
-        background: #fafafa;
-    }
+        // Nachrichtenanzeige
+        function addBotMessage(text, buttons = []) {
+            const botDiv = document.createElement('div');
+            botDiv.className = 'chat-message bot';
+            botDiv.textContent = text;
+            messagesContainer.appendChild(botDiv);
 
-    .n8n-chat-widget .chat-message {
-        padding: 12px 16px;
-        border-radius: 16px;
-        max-width: 80%;
-        font-size: 14px;
-        line-height: 1.5;
-        word-break: break-word;
-        animation: messagePop 0.25s ease-out;
-    }
+            if (buttons.length > 0) {
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'chat-buttons';
+                buttons.forEach(choice => {
+                    const btn = document.createElement('button');
+                    btn.className = 'chat-button';
+                    btn.textContent = choice;
+                    btn.onclick = () => sendMessage(choice);
+                    btnContainer.appendChild(btn);
+                });
+                messagesContainer.appendChild(btnContainer);
+            }
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
 
-    @keyframes messagePop {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+        // Chat starten
+        async function startNewConversation() {
+            currentSessionId = crypto.randomUUID();
+            try {
+                const res = await fetch(config.webhook?.url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify([{ action: "start", sessionId: currentSessionId }])
+                });
+                const data = await res.json();
+                chatContainer.querySelector('.brand-header').style.display = 'none';
+                chatContainer.querySelector('.new-conversation').style.display = 'none';
+                chatInterface.classList.add('active');
+                addBotMessage(
+                    data.output || '👋 Hallo! Wie kann ich dir heute helfen?',
+                    data.choices || [
+                        "💻 Neue Website erstellen",
+                        "🚀 Mehr Kunden über meine Website gewinnen",
+                        "✍️ Hilfe bei Texten oder SEO",
+                        "📞 Kontakt aufnehmen"
+                    ]
+                );
+            } catch (err) { console.error(err); }
+        }
 
-    .n8n-chat-widget .chat-message.user {
-        align-self: flex-end;
-        background: linear-gradient(135deg, var(--chat--color-primary), var(--chat--color-secondary));
-        color: #fff;
-        border-bottom-right-radius: 4px;
-        box-shadow: 0 4px 10px rgba(127,87,241,0.3);
-    }
+        // Nachricht senden
+        async function sendMessage(message) {
+            const userDiv = document.createElement('div');
+            userDiv.className = 'chat-message user';
+            userDiv.textContent = message;
+            messagesContainer.appendChild(userDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-    .n8n-chat-widget .chat-message.bot {
-        align-self: flex-start;
-        background: #fff;
-        border: 1px solid var(--chat--color-border);
-        color: var(--chat--color-font);
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-    }
+            try {
+                const res = await fetch(config.webhook?.url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "sendMessage", sessionId: currentSessionId, chatInput: message })
+                });
+                const data = await res.json();
+                addBotMessage(data.output || '', data.choices || []);
+            } catch (err) { console.error(err); }
+        }
 
-    /* Buttons */
-    .n8n-chat-widget .chat-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 6px;
-    }
-
-    .n8n-chat-widget .chat-button {
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: none;
-        background: linear-gradient(135deg, var(--chat--color-primary), var(--chat--color-secondary));
-        color: white;
-        cursor: pointer;
-        font-size: 13px;
-        transition: transform 0.15s, box-shadow 0.15s;
-        box-shadow: 0 4px 12px rgba(127,87,241,0.3);
-    }
-
-    .n8n-chat-widget .chat-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(127,87,241,0.4);
-    }
-
-    /* Input Area */
-    .n8n-chat-widget .chat-input {
-        padding: 16px;
-        background: #fff;
-        border-top: 1px solid rgba(127,87,241,0.1);
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-
-    .n8n-chat-widget .chat-input textarea {
-        flex: 1;
-        padding: 12px;
-        border: 1px solid rgba(127,87,241,0.25);
-        border-radius: 12px;
-        resize: none;
-        font-size: 14px;
-        outline: none;
-        transition: border 0.2s, box-shadow 0.2s;
-    }
-
-    .n8n-chat-widget .chat-input textarea:focus {
-        border-color: var(--chat--color-primary);
-        box-shadow: 0 0 0 3px rgba(127,87,241,0.2);
-    }
-
-    .n8n-chat-widget .chat-input button {
-        background: linear-gradient(135deg, var(--chat--color-primary), var(--chat--color-secondary));
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 10px 18px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: transform 0.2s;
-    }
-
-    .n8n-chat-widget .chat-input button:hover {
-        transform: scale(1.05);
-    }
-
-    /* Chat Toggle Button */
-    .n8n-chat-widget .chat-toggle {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 65px;
-        height: 65px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--chat--color-primary), var(--chat--color-secondary));
-        color: white;
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 8px 20px rgba(127,87,241,0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.25s, box-shadow 0.25s;
-    }
-
-    .n8n-chat-widget .chat-toggle:hover {
-        transform: scale(1.08);
-        box-shadow: 0 10px 28px rgba(127,87,241,0.45);
-    }
-
-    .n8n-chat-widget .chat-toggle svg {
-        width: 26px;
-        height: 26px;
-    }
-`;
+        // Event Listener
+        newChatBtn.addEventListener('click', startNewConversation);
+        sendButton.addEventListener('click', () => { 
+            const msg = textarea.value.trim(); 
+            if (msg) { sendMessage(msg); textarea.value = ''; } 
+        });
+        textarea.addEventListener('keypress', e => { 
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                const msg = textarea.value.trim(); 
+                if (msg) { sendMessage(msg); textarea.value = ''; } 
+            } 
+        });
+        toggleButton.addEventListener('click', () => chatContainer.classList.toggle('open'));
+        chatContainer.querySelectorAll('.close-button').forEach(btn => btn.addEventListener('click', () => chatContainer.classList.remove('open')));
+    }, 300);
+})();
