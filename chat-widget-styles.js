@@ -1,9 +1,214 @@
-// Optimodo Chat Widget – Modern Gradient Design
+// Optimodo Chat Widget – Full Inline Version (Modern Gradient Design)
 (function() {
-    // Lade externe Styles
-    const styleScript = document.createElement('script');
-    styleScript.src = "https://cdn.jsdelivr.net/gh/optimodoagency/chat-widget-new2@main/chat-widget-styles.js";
-    document.head.appendChild(styleScript);
+    // 🌈 Inline Styles (Modern Gradient Look)
+    const styles = `
+        .n8n-chat-widget {
+            --color-primary: #7f57f1;
+            --color-secondary: #9c7bff;
+            --color-bg: #ffffff;
+            --color-bot-bg: #f8f8ff;
+            --color-font: #1a1a1a;
+            --radius: 22px;
+            --shadow: 0 8px 30px rgba(127, 87, 241, 0.15);
+            font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .n8n-chat-widget .chat-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 390px;
+            height: 640px;
+            background: var(--color-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(8px);
+            transition: all 0.4s ease;
+            z-index: 1000;
+            border: 1px solid rgba(127, 87, 241, 0.15);
+        }
+
+        .n8n-chat-widget .chat-container.open {
+            display: flex;
+        }
+
+        .n8n-chat-widget .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+        }
+
+        .n8n-chat-widget .brand-header span {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .n8n-chat-widget .brand-header img {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
+        }
+
+        .n8n-chat-widget .close-button {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .n8n-chat-widget .close-button:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .n8n-chat-widget .chat-messages {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: var(--color-bot-bg);
+            scroll-behavior: smooth;
+        }
+
+        .n8n-chat-widget .chat-message {
+            max-width: 80%;
+            padding: 14px 18px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            animation: fadeIn 0.25s ease-out;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .n8n-chat-widget .chat-message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #fff;
+            border-bottom-right-radius: 5px;
+        }
+
+        .n8n-chat-widget .chat-message.bot {
+            align-self: flex-start;
+            background: #fff;
+            border: 1px solid rgba(127,87,241,0.15);
+            border-bottom-left-radius: 5px;
+            color: var(--color-font);
+        }
+
+        .n8n-chat-widget .chat-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 6px 0 12px;
+        }
+
+        .n8n-chat-widget .chat-button {
+            padding: 12px 18px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 14px rgba(127, 87, 241, 0.25);
+        }
+
+        .n8n-chat-widget .chat-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 18px rgba(127, 87, 241, 0.35);
+        }
+
+        .n8n-chat-widget .chat-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 16px;
+            background: #fff;
+            border-top: 1px solid rgba(127,87,241,0.15);
+        }
+
+        .n8n-chat-widget .chat-input textarea {
+            flex: 1;
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(127,87,241,0.25);
+            font-size: 14px;
+            resize: none;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .n8n-chat-widget .chat-input textarea:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(127,87,241,0.2);
+            outline: none;
+        }
+
+        .n8n-chat-widget .chat-input button {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .n8n-chat-widget .chat-input button:hover {
+            transform: scale(1.05);
+        }
+
+        .n8n-chat-widget .chat-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(127, 87, 241, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            z-index: 999;
+        }
+
+        .n8n-chat-widget .chat-toggle:hover {
+            transform: scale(1.08);
+            box-shadow: 0 12px 40px rgba(127, 87, 241, 0.5);
+        }
+
+        .n8n-chat-widget .chat-toggle svg {
+            width: 28px;
+            height: 28px;
+        }
+    `;
+
+    // Inject styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = styles;
+    document.head.appendChild(styleSheet);
 
     // Lade Schriftart
     const fontLink = document.createElement('link');
@@ -11,7 +216,7 @@
     fontLink.href = 'https://cdn.jsdelivr.net/npm/geist@1.0.0/dist/fonts/geist-sans/style.css';
     document.head.appendChild(fontLink);
 
-    // Warte, bis Styles geladen sind
+    // Haupt-Widget-Logik
     setTimeout(() => {
         const config = window.ChatWidgetConfig || {};
         if (window.OptimodoChatWidgetInitialized) return;
@@ -24,7 +229,6 @@
         const chatContainer = document.createElement('div');
         chatContainer.className = `chat-container${config.style?.position === 'left' ? ' position-left' : ''}`;
 
-        // Chat HTML-Struktur
         chatContainer.innerHTML = `
             <div class="brand-header">
                 <img src="${config.branding?.logo || ''}" alt="${config.branding?.name || 'Chat'}">
@@ -50,7 +254,6 @@
             </div>
         `;
 
-        // Toggle Button
         const toggleButton = document.createElement('button');
         toggleButton.className = `chat-toggle${config.style?.position === 'left' ? ' position-left' : ''}`;
         toggleButton.innerHTML = `
@@ -63,14 +266,12 @@
         widgetContainer.appendChild(toggleButton);
         document.body.appendChild(widgetContainer);
 
-        // Referenzen
         const newChatBtn = chatContainer.querySelector('.new-chat-btn');
         const chatInterface = chatContainer.querySelector('.chat-interface');
         const messagesContainer = chatContainer.querySelector('.chat-messages');
         const textarea = chatContainer.querySelector('textarea');
         const sendButton = chatContainer.querySelector('button[type="submit"]');
 
-        // Nachrichtenanzeige
         function addBotMessage(text, buttons = []) {
             const botDiv = document.createElement('div');
             botDiv.className = 'chat-message bot';
@@ -92,7 +293,6 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Chat starten
         async function startNewConversation() {
             currentSessionId = crypto.randomUUID();
             try {
@@ -114,12 +314,9 @@
                         "📞 Ich möchte Kontakt aufnehmen"
                     ]
                 );
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // Nachricht senden
         async function sendMessage(message) {
             const userDiv = document.createElement('div');
             userDiv.className = 'chat-message user';
@@ -135,12 +332,9 @@
                 });
                 const data = await res.json();
                 addBotMessage(data.output || '', data.choices || []);
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // Event Listener
         newChatBtn.addEventListener('click', startNewConversation);
         sendButton.addEventListener('click', () => {
             const msg = textarea.value.trim();
@@ -154,8 +348,8 @@
             }
         });
         toggleButton.addEventListener('click', () => chatContainer.classList.toggle('open'));
-        chatContainer.querySelectorAll('.close-button').forEach(btn => 
+        chatContainer.querySelectorAll('.close-button').forEach(btn =>
             btn.addEventListener('click', () => chatContainer.classList.remove('open'))
         );
-    }, 400);
+    }, 200);
 })();
